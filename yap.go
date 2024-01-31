@@ -82,6 +82,11 @@ func (p *Engine) LoadTempalte(patterns ...string) {
 	if e != nil {
 		log.Panicln(e)
 	}
+	log.Println("loaded template Map:")
+	for i, t := range p.tpl.Templates() {
+		log.Println(i, t.Name())
+	}
+	log.Println("======================")
 }
 
 func (p *Engine) yapFS() fs.FS {
