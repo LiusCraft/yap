@@ -22,10 +22,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/goplus/yap/noredirect"
+	_ "github.com/joho/godotenv/autoload"
 )
+
+var (
+	IsDebugMode = false
+)
+
+func init() {
+	IsDebugMode, _ = strconv.ParseBool(os.Getenv("YAP_DEBUG"))
+}
 
 type H map[string]interface{}
 
@@ -162,7 +172,7 @@ func (p *Engine) SetLAS(listenAndServe func(addr string, handler http.Handler) e
 }
 
 func (p *Engine) templ(path string) *template.Template {
-	if p.tpl == nil {
+	if p.tpl == nil || IsDebugMode {
 		p.LoadTemplate()
 	}
 	return p.tpl.Lookup(path)
