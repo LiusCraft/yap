@@ -7,3 +7,5 @@ require (
 	github.com/goplus/gop v1.2.0
 	github.com/qiniu/x v1.13.3
 )
+
+require github.com/joho/godotenv v1.5.1
