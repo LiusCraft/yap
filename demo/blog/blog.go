@@ -8,7 +8,7 @@ import (
 
 func main() {
 	y := yap.New(os.DirFS("."))
-
+	y.LoadTemplate("*.*", "**/*.html")
 	y.GET("/p/:id", func(ctx *yap.Context) {
 		ctx.YAP(200, "article", yap.H{
 			"id": ctx.Param("id"),
