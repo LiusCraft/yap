@@ -90,6 +90,12 @@ func (p *App) Template(pattern ...string) {
 	p.Engine.LoadTemplate(pattern...)
 }
 
+// custom delimiter,
+// example:{{  }} => ${  }$
+func (p *App) SetDelims(left, right string) {
+	p.Engine.SetDelims(left, right)
+}
+
 // AppType represents an abstract of YAP applications.
 type AppType interface {
 	InitYap(fs ...fs.FS)
