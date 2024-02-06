@@ -43,9 +43,10 @@ type Engine struct {
 	router
 	Mux *http.ServeMux
 
-	tpl *Template
-	fs  fs.FS
-	las func(addr string, handler http.Handler) error
+	tpl             *Template
+	fs              fs.FS
+	las             func(addr string, handler http.Handler) error
+	tempaltePattern []string
 }
 
 // New creates a YAP engine.
@@ -82,6 +83,8 @@ func (p *Engine) initYapFS(fsys fs.FS) {
 func (p *Engine) LoadTemplate(pattern ...string) {
 	if len(pattern) == 0 {
 		pattern = append(pattern, "*_yap.html")
+	} else {
+		p.tempaltePattern = pattern
 	}
 	t, err := parseFS(NewTemplate(""), p.yapFS(), pattern)
 	if err != nil {
@@ -173,7 +176,7 @@ func (p *Engine) SetLAS(listenAndServe func(addr string, handler http.Handler) e
 
 func (p *Engine) templ(path string) *template.Template {
 	if p.tpl == nil || IsDebugMode {
-		p.LoadTemplate()
+		p.LoadTemplate(p.tempaltePattern...)
 	}
 	return p.tpl.Lookup(path)
 }
