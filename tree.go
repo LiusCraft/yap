@@ -234,12 +234,13 @@ func (n *node) insertChild(path, fullPath string, handle func(ctx *Context)) {
 			panic("wildcards must be named with a non-empty name in path '" + fullPath + "'")
 		}
 
+		// Allow a wildcard with other named path
 		// Check if this node has existing children which would be
 		// unreachable if we insert the wildcard here
-		if len(n.children) > 0 {
-			panic("wildcard segment '" + wildcard +
-				"' conflicts with existing children in path '" + fullPath + "'")
-		}
+		// if len(n.children) > 0 {
+		// 	panic("wildcard segment '" + wildcard +
+		// 		"' conflicts with existing children in path '" + fullPath + "'")
+		// }
 
 		// param
 		if wildcard[0] == ':' {

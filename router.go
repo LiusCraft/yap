@@ -17,7 +17,12 @@
 package yap
 
 import (
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/goplus/yap/internal/url"
@@ -143,6 +148,8 @@ func (r *router) Route(method, path string, handle func(ctx *Context)) {
 		panic("handle must not be nil")
 	}
 
+	debugPrintRoute(method, path, handle)
+
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
 	}
@@ -156,6 +163,24 @@ func (r *router) Route(method, path string, handle func(ctx *Context)) {
 	}
 
 	root.addRoute(path, handle)
+}
+
+// DefaultWriter is the default io.Writer used by Yap to debug information
+var DefaultWriter io.Writer = os.Stdout
+
+// DefaultErrorWriter is the default io.Writer used by Yap to debug errors
+var DefaultErrorWriter io.Writer = os.Stderr
+
+func debugPrintRoute(httpMethod, absolutePath string, handle func(ctx *Context)) {
+	handleName := runtime.FuncForPC(reflect.ValueOf(handle).Pointer()).Name()
+	debugPrint("%-6s %-25s --> %s handlers\n", httpMethod, absolutePath, handleName)
+}
+
+func debugPrint(format string, values ...any) {
+	if !strings.HasSuffix(format, "\n") {
+		format += "\n"
+	}
+	fmt.Fprintf(DefaultWriter, "[YAP-debug] "+format, values...)
 }
 
 func (r *router) recv(w http.ResponseWriter, req *http.Request) {
