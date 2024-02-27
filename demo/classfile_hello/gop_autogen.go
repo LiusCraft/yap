@@ -8,29 +8,29 @@ type hello struct {
 //line demo/classfile_hello/hello_yap.gox:1
 func (this *hello) MainEntry() {
 //line demo/classfile_hello/hello_yap.gox:1:1
-	this.Get("/p/info", func(ctx *yap.Context) {
+	this.Get("/p/:id", func(ctx *yap.Context) {
 //line demo/classfile_hello/hello_yap.gox:2:1
-		ctx.Json__1(map[string]string{"info": "Test info"})
+		ctx.Json__1(map[string]string{"id": ctx.Param("id")})
 	})
 //line demo/classfile_hello/hello_yap.gox:6:1
-	this.Get("/p/:id", func(ctx *yap.Context) {
+	this.Post("/p/:id", func(ctx *yap.Context) {
 //line demo/classfile_hello/hello_yap.gox:7:1
 		ctx.Json__1(map[string]string{"id": ctx.Param("id")})
 	})
 //line demo/classfile_hello/hello_yap.gox:11:1
-	this.Post("/p/:id", func(ctx *yap.Context) {
+	this.Put("/p/:id", func(ctx *yap.Context) {
 //line demo/classfile_hello/hello_yap.gox:12:1
 		ctx.Json__1(map[string]string{"id": ctx.Param("id")})
 	})
 //line demo/classfile_hello/hello_yap.gox:16:1
-	this.Put("/p/:id", func(ctx *yap.Context) {
+	this.Delete("/p/:id", func(ctx *yap.Context) {
 //line demo/classfile_hello/hello_yap.gox:17:1
 		ctx.Json__1(map[string]string{"id": ctx.Param("id")})
 	})
 //line demo/classfile_hello/hello_yap.gox:21:1
-	this.Delete("/p/:id", func(ctx *yap.Context) {
+	this.Get("/p/info", func(ctx *yap.Context) {
 //line demo/classfile_hello/hello_yap.gox:22:1
-		ctx.Json__1(map[string]string{"id": ctx.Param("id")})
+		ctx.Json__1(map[string]string{"info": "Test info"})
 	})
 //line demo/classfile_hello/hello_yap.gox:26:1
 	this.Handle("/", func(ctx *yap.Context) {

@@ -148,33 +148,6 @@ walk:
 		// Make new node a child of this node
 		if i < len(path) {
 			path = path[i:]
-
-			if n.wildChild {
-				n = n.children[0]
-				n.priority++
-
-				// Check if the wildcard matches
-				if len(path) >= len(n.path) && n.path == path[:len(n.path)] &&
-					// Adding a child to a catchAll is not possible
-					n.nType != catchAll &&
-					// Check for longer wildcard, e.g. :name and :names
-					(len(n.path) >= len(path) || path[len(n.path)] == '/') {
-					continue walk
-				} else {
-					// Wildcard conflict
-					pathSeg := path
-					if n.nType != catchAll {
-						pathSeg = strings.SplitN(pathSeg, "/", 2)[0]
-					}
-					prefix := fullPath[:strings.Index(fullPath, pathSeg)] + n.path
-					panic("'" + pathSeg +
-						"' in new path '" + fullPath +
-						"' conflicts with existing wildcard '" + n.path +
-						"' in existing prefix '" + prefix +
-						"'")
-				}
-			}
-
 			idxc := path[0]
 
 			// '/' after param
@@ -201,7 +174,32 @@ walk:
 				n.children = append(n.children, child)
 				n.incrementChildPrio(len(n.indices) - 1)
 				n = child
+			} else if n.wildChild {
+				n = n.children[0]
+				n.priority++
+
+				// Check if the wildcard matches
+				if len(path) >= len(n.path) && n.path == path[:len(n.path)] &&
+					// Adding a child to a catchAll is not possible
+					n.nType != catchAll &&
+					// Check for longer wildcard, e.g. :name and :names
+					(len(n.path) >= len(path) || path[len(n.path)] == '/') {
+					continue walk
+				} else {
+					// Wildcard conflict
+					pathSeg := path
+					if n.nType != catchAll {
+						pathSeg = strings.SplitN(pathSeg, "/", 2)[0]
+					}
+					prefix := fullPath[:strings.Index(fullPath, pathSeg)] + n.path
+					panic("'" + pathSeg +
+						"' in new path '" + fullPath +
+						"' conflicts with existing wildcard '" + n.path +
+						"' in existing prefix '" + prefix +
+						"'")
+				}
 			}
+
 			n.insertChild(path, fullPath, handle)
 			return
 		}
@@ -332,6 +330,24 @@ walk: // Outer loop for walking the tree
 		if len(path) > len(prefix) {
 			if path[:len(prefix)] == prefix {
 				path = path[len(prefix):]
+
+				// Try all the non-wildcard children first by matching the indices
+				// used for /p/:id and /p/info, if path is /p, then we should try
+				// the children with the indices 'i' and 'n' before the param child
+				// with the index ':'
+				idxc := path[0]
+				for i, c := range []byte(n.indices) {
+					if c == idxc {
+						if n.wildChild && idxc != '/' && idxc != '.' && i < len(n.children)-1 {
+							n = n.children[i+1]
+						} else {
+							n = n.children[i]
+						}
+
+						// continue with child node
+						continue walk
+					}
+				}
 
 				// If this node does not have a wildcard (param or catchAll)
 				// child, we can just look up the next child node and continue

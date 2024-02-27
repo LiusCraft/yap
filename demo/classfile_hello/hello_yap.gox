@@ -1,8 +1,3 @@
-get "/p/info", ctx => {
-	ctx.json {
-		"info": "Test info",
-	}
-}
 get "/p/:id", ctx => {
 	ctx.json {
 		"id": ctx.param("id"),
@@ -21,6 +16,11 @@ put "/p/:id", ctx => {
 delete "/p/:id", ctx => {
 	ctx.json {
 		"id": ctx.param("id"),
+	}
+}
+get "/p/info", ctx => {
+	ctx.json {
+		"info": "Test info",
 	}
 }
 handle "/", ctx => {
