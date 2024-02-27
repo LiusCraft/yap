@@ -250,6 +250,7 @@ func (r *router) serveHTTP(w http.ResponseWriter, req *http.Request, e *Engine) 
 	if root != nil {
 		ctx := e.NewContext(w, req)
 		if handle, tsr := root.getValue(path, ctx); handle != nil {
+			debugPrint("Found route: %s %s", req.Method, path)
 			handle(ctx)
 			return
 		} else if req.Method != http.MethodConnect && path != "/" {
