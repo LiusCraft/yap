@@ -239,21 +239,28 @@ func (n *node) insertChild(path, fullPath string, handle func(ctx *Context)) {
 		// 	panic("wildcard segment '" + wildcard +
 		// 		"' conflicts with existing children in path '" + fullPath + "'")
 		// }
-
+		var child *node
 		// param
+		n.wildChild = true
 		if wildcard[0] == ':' {
-			if i > 0 {
-				// Insert prefix before the current wildcard
-				n.path = path[:i]
-				path = path[i:]
+			if len(n.children) > 0 {
+				child = &node{
+					nType: param,
+					path:  wildcard,
+				}
+				n.children = append(n.children, child)
+			} else {
+				if i > 0 {
+					// Insert prefix before the current wildcard
+					n.path = path[:i]
+					path = path[i:]
+				}
+				child = &node{
+					nType: param,
+					path:  wildcard,
+				}
+				n.children = []*node{child}
 			}
-
-			n.wildChild = true
-			child := &node{
-				nType: param,
-				path:  wildcard,
-			}
-			n.children = []*node{child}
 			n = child
 			n.priority++
 
@@ -292,7 +299,7 @@ func (n *node) insertChild(path, fullPath string, handle func(ctx *Context)) {
 		n.path = path[:i]
 
 		// First node: catchAll node with empty path
-		child := &node{
+		child = &node{
 			wildChild: true,
 			nType:     catchAll,
 		}
@@ -369,55 +376,57 @@ walk: // Outer loop for walking the tree
 				}
 
 				// Handle wildcard child
-				n = n.children[0]
-				switch n.nType {
-				case param:
-					// Find param end (either '/' or path end)
-					end := 0
-					for end < len(path) && path[end] != '/' {
-						end++
-					}
-
-					// Save param value
-					if ctx != nil {
-						ctx.setParam(n.path[1:], path[:end])
-					}
-
-					// We need to go deeper!
-					if end < len(path) {
-						if len(n.children) > 0 {
-							path = path[end:]
-							n = n.children[0]
-							continue walk
+				for _, itemN := range n.children {
+					switch itemN.nType {
+					case param:
+						// Find param end (either '/' or path end)
+						end := 0
+						for end < len(path) && path[end] != '/' {
+							end++
 						}
 
-						// ... but we can't
-						tsr = (len(path) == end+1)
+						// Save param value
+						if ctx != nil {
+							ctx.setParam(itemN.path[1:], path[:end])
+						}
+
+						// We need to go deeper!
+						if end < len(path) {
+							if len(n.children) > 0 {
+								path = path[end:]
+								n = itemN.children[0]
+								continue walk
+							}
+
+							// ... but we can't
+							tsr = (len(path) == end+1)
+							return
+						}
+
+						if handle = itemN.handle; handle != nil {
+							return
+						} else if len(itemN.children) == 1 {
+							// No handle found. Check if a handle for this path + a
+							// trailing slash exists for TSR recommendation
+							n = itemN.children[0]
+							tsr = (n.path == "/" && n.handle != nil) || (n.path == "" && n.indices == "/")
+						}
 						return
-					}
 
-					if handle = n.handle; handle != nil {
+					case catchAll:
+						// Save param value
+						if ctx != nil {
+							ctx.setParam(itemN.path[2:], path)
+						}
+
+						handle = itemN.handle
 						return
-					} else if len(n.children) == 1 {
-						// No handle found. Check if a handle for this path + a
-						// trailing slash exists for TSR recommendation
-						n = n.children[0]
-						tsr = (n.path == "/" && n.handle != nil) || (n.path == "" && n.indices == "/")
+
+					default:
+						continue
 					}
-					return
-
-				case catchAll:
-					// Save param value
-					if ctx != nil {
-						ctx.setParam(n.path[2:], path)
-					}
-
-					handle = n.handle
-					return
-
-				default:
-					panic("invalid node type")
 				}
+				panic("invalid node type")
 			}
 		} else if path == prefix {
 			// We should have reached the node containing the handle.
