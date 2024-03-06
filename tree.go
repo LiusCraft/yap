@@ -175,7 +175,11 @@ walk:
 				n.incrementChildPrio(len(n.indices) - 1)
 				n = child
 			} else if n.wildChild {
-				n = n.children[0]
+				for i, itemN := range n.children {
+					if itemN.nType == param {
+						n = n.children[i]
+					}
+				}
 				n.priority++
 
 				// Check if the wildcard matches
@@ -241,8 +245,8 @@ func (n *node) insertChild(path, fullPath string, handle func(ctx *Context)) {
 		// }
 		var child *node
 		// param
-		n.wildChild = true
 		if wildcard[0] == ':' {
+			n.wildChild = true
 			if len(n.children) > 0 {
 				child = &node{
 					nType: param,
@@ -345,14 +349,20 @@ walk: // Outer loop for walking the tree
 				idxc := path[0]
 				for i, c := range []byte(n.indices) {
 					if c == idxc {
-						if n.wildChild && idxc != '/' && idxc != '.' && i < len(n.children)-1 {
-							n = n.children[i+1]
+
+						if n.wildChild {
+							for _, itemN := range n.children {
+								if itemN.path == path[:len(itemN.path)] {
+									n = itemN
+									continue walk
+								}
+							}
 						} else {
 							n = n.children[i]
+							// continue with child node
+							continue walk
 						}
 
-						// continue with child node
-						continue walk
 					}
 				}
 

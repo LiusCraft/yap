@@ -23,6 +23,15 @@ func main() {
 	y.GET("/api/user/:id/articles", func(ctx *yap.Context) {
 		println("article get")
 	})
+	y.GET("/api/user/:id/articles/:actionId", func(ctx *yap.Context) {
+		println("article actionId")
+	})
+	y.GET("/api/user/:id/articles/:actionId/ok", func(ctx *yap.Context) {
+		println("article actionId ok")
+	})
+	y.GET("/api/user/:id/:actionId/ok", func(ctx *yap.Context) {
+		println("article id actionId ok")
+	})
 
 	y.Run(":8080")
 }
